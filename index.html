@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Viewer - Mangkunegaran</title>
+  <title>3D Viewer - Mangkunegaran FIX</title>
   <style>
     body, html {
       margin: 0;
@@ -25,43 +25,56 @@
 
 <script>
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  scene.background = new THREE.Color(0x111111);
 
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  camera.position.set(0, 1.6, 3);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Light
-  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-  scene.add(light);
+  // Lights
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+  hemiLight.position.set(0, 20, 0);
+  scene.add(hemiLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+  dirLight.position.set(5, 10, 7.5);
+  scene.add(dirLight);
 
   // Load model
   const loader = new THREE.GLTFLoader();
-  loader.load('Mangkunegaran.glb',
-    function (gltf) {
-      const model = gltf.scene;
-      scene.add(model);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
+  loader.load("Mangkunegaran.glb", function (gltf) {
+    const model = gltf.scene;
 
-  camera.position.set(0, 1.6, 3);
+    // Auto center & scale
+    model.scale.set(1, 1, 1);
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
 
-  // Controls (Mouse drag)
+    scene.add(model);
+  });
+
+  // Mouse control
   let isDragging = false;
-  let prevMouse = { x: 0, y: 0 };
+  let prev = { x: 0, y: 0 };
 
-  document.addEventListener('mousedown', () => isDragging = true);
-  document.addEventListener('mouseup', () => isDragging = false);
-  document.addEventListener('mousemove', event => {
+  document.addEventListener("mousedown", () => (isDragging = true));
+  document.addEventListener("mouseup", () => (isDragging = false));
+  document.addEventListener("mousemove", (e) => {
     if (isDragging) {
-      camera.rotation.y -= (event.clientX - prevMouse.x) * 0.005;
-      camera.rotation.x -= (event.clientY - prevMouse.y) * 0.005;
+      camera.rotation.y -= (e.clientX - prev.x) * 0.005;
+      camera.rotation.x -= (e.clientY - prev.y) * 0.005;
     }
-    prevMouse = { x: event.clientX, y: event.clientY };
+    prev = { x: e.clientX, y: e.clientY };
   });
 
   function animate() {
