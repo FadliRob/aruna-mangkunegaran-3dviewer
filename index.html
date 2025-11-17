@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Viewer - Mangkunegaran FIX</title>
+  <title>3D Viewer - HDRI</title>
   <style>
     body, html {
       margin: 0;
@@ -21,44 +21,41 @@
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/RGBELoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
 
 <script>
   const scene = new THREE.Scene();
 
-  // Background image
-  const loaderBG = new THREE.TextureLoader();
-  loaderBG.load('background.jpg', function(texture) {
-    scene.background = texture;
-  });
-
-  const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(0, 1.6, 3);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.outputEncoding = THREE.sRGBEncoding;
   document.body.appendChild(renderer.domElement);
 
-  // OrbitControls for zoom & rotate
+  // OrbitControls
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
   controls.enableZoom = true;
-  controls.zoomSpeed = 1.0;
-  controls.rotateSpeed = 0.5;
 
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-  scene.add(ambientLight);
+  // Load HDRI
+  const rgbeLoader = new THREE.RGBELoader();
+  rgbeLoader.setDataType(THREE.UnsignedByteType);
+  rgbeLoader.load('env.hdr', function (texture) {
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-  dirLight.position.set(5, 10, 7.5);
-  scene.add(dirLight);
+    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+    scene.environment = envMap;
+    scene.background = envMap;
+
+    texture.dispose();
+    pmremGenerator.dispose();
+  });
 
   // Load model
   const loader = new THREE.GLTFLoader();
