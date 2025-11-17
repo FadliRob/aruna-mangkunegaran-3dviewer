@@ -3,35 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Viewer</title>
-
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-
+  <title>3D Viewer - Mangkunegaran</title>
   <style>
-    body {
+    body, html {
       margin: 0;
       padding: 0;
+      overflow: hidden;
+      height: 100%;
       background: #000;
-      height: 100vh;
     }
-    model-viewer {
-      width: 100vw;
-      height: 100vh;
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
   </style>
 </head>
 <body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
 
-  <model-viewer
-    src="Mangkunegaran.glb"
-    camera-controls
-    touch-action="pan-y"
-    shadow-intensity="1"
-    exposure="1.1"
-    auto-rotate
-    ar
-    ar-modes="webxr scene-viewer quick-look">
-  </model-viewer>
+<script>
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // Light
+  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+  scene.add(light);
+
+  // Load model
+  const loader = new THREE.GLTFLoader();
+  loader.load('Mangkunegaran.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      scene.add(model);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
+  );
+
+  camera.position.set(0, 1.6, 3);
+
+  // Controls (Mouse drag)
+  let isDragging = false;
+  let prevMouse = { x: 0, y: 0 };
+
+  document.addEventListener('mousedown', () => isDragging = true);
+  document.addEventListener('mouseup', () => isDragging = false);
+  document.addEventListener('mousemove', event => {
+    if (isDragging) {
+      camera.rotation.y -= (event.clientX - prevMouse.x) * 0.005;
+      camera.rotation.x -= (event.clientY - prevMouse.y) * 0.005;
+    }
+    prevMouse = { x: event.clientX, y: event.clientY };
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
+
+  animate();
+</script>
 
 </body>
 </html>
