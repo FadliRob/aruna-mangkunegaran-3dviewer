@@ -1,53 +1,42 @@
+import * as THREE from "./libs/three.module.js";
+import { GLTFLoader } from "./libs/GLTFLoader.js";
+import { RGBELoader } from "./libs/RGBELoader.js";
+import { PointerLockControls } from "./libs/PointerLockControls.js";
+
 let scene, camera, renderer, controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-
-let velocity = new THREE.Vector3();
-let direction = new THREE.Vector3();
-
-init();
-animate();
 
 function init() {
     scene = new THREE.Scene();
 
-    // Camera
-    camera = new THREE.PerspectiveCamera(
-        70,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        2000
-    );
+    // ========== CAMERA ==========
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 3000);
     camera.position.set(0, 3, 5);
 
-    // Renderer
+    // ========== RENDERER ==========
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
     renderer.outputEncoding = THREE.sRGBEncoding;
-
     document.body.appendChild(renderer.domElement);
 
-    // === HDRI Environment ===
-    new THREE.RGBELoader()
-        .setPath("hdr/")
-        .load("env.hdr", function (texture) {
+    // ========== HDRI ==========
+    new RGBELoader()
+        .setPath("/hdr/")
+        .load("env.hdr", (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             scene.environment = texture;
-            scene.background = texture; // bisa diganti null jika mau background polos
+            scene.background = texture;
         });
 
-    // Light
+    // ========== LIGHT ==========
     scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
 
-    // FPS Controls
-    controls = new THREE.PointerLockControls(camera, document.body);
-    document.getElementById("lookButton").addEventListener("click", () => {
-        controls.lock();
-    });
+    // ========== POINTER LOCK ==========
+    controls = new PointerLockControls(camera, document.body);
+    document.getElementById("lookButton").onclick = () => controls.lock();
 
-    // Keyboard controls
+    // ========== KEYBOARD ==========
     document.addEventListener("keydown", (e) => {
         if (e.key === "w") moveForward = true;
         if (e.key === "s") moveBackward = true;
@@ -62,14 +51,14 @@ function init() {
         if (e.key === "d") moveRight = false;
     });
 
-    // Load Model
-    const loader = new THREE.GLTFLoader();
-    loader.load("./model/Mangkunegaran.glb", (gltf) => {
+    // ========== LOAD GLB ==========
+    const loader = new GLTFLoader();
+    loader.load("/model/Mangkunegaran.glb", (gltf) => {
         scene.add(gltf.scene);
         document.getElementById("loading").style.display = "none";
     });
 
-    // Joystick
+    // ========== MOBILE JOYSTICK ==========
     const joy = new Joystick(document.getElementById("joystickContainer"));
 
     setInterval(() => {
@@ -91,14 +80,12 @@ function onResize() {
 function animate() {
     requestAnimationFrame(animate);
 
-    const speed = 0.08;
+    const speed = 0.1;
 
-    direction.z = Number(moveForward) - Number(moveBackward);
-    direction.x = Number(moveRight) - Number(moveLeft);
-    direction.normalize();
+    const dir = new THREE.Vector3();
+    dir.z = Number(moveForward) - Number(moveBackward);
+    dir.x = Number(moveRight) - Number(moveLeft);
+    dir.normalize();
 
-    controls.moveRight(direction.x * speed);
-    controls.moveForward(direction.z * speed);
-
-    renderer.render(scene, camera);
-}
+    controls.moveRight(dir.x * speed);
+    controls.moveForward(dir.z * speed);

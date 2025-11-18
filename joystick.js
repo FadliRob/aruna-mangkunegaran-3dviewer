@@ -1,18 +1,21 @@
 class Joystick {
-    constructor(container, maxDistance = 40) {
+    constructor(container) {
         this.container = container;
-        this.maxDistance = maxDistance;
-
         this.value = { x: 0, y: 0 };
 
+        this.create();
+        this.bindEvents();
+    }
+
+    create() {
         this.base = document.createElement("div");
         this.stick = document.createElement("div");
 
         Object.assign(this.base.style, {
             position: "absolute",
-            width: "100px",
-            height: "100px",
-            background: "rgba(255,255,255,0.2)",
+            width: "120px",
+            height: "120px",
+            background: "#ffffff30",
             borderRadius: "50%"
         });
 
@@ -20,45 +23,46 @@ class Joystick {
             position: "absolute",
             width: "60px",
             height: "60px",
-            background: "rgba(255,255,255,0.6)",
+            background: "#ffffff80",
             borderRadius: "50%",
-            left: "20px",
-            top: "20px"
+            left: "30px",
+            top: "30px"
         });
 
-        container.appendChild(this.base);
-        container.appendChild(this.stick);
+        this.container.appendChild(this.base);
+        this.base.appendChild(this.stick);
+    }
 
-        this.active = false;
+    bindEvents() {
+        let active = false;
+        let startX = 0, startY = 0;
 
-        const move = (e) => {
-            if (!this.active) return;
-            const rect = this.container.getBoundingClientRect();
+        this.base.addEventListener("touchstart", (e) => {
+            active = true;
+            const t = e.touches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+        });
 
-            const x = e.touches[0].clientX - rect.left - 50;
-            const y = e.touches[0].clientY - rect.top - 50;
+        this.base.addEventListener("touchmove", (e) => {
+            if (!active) return;
+            const t = e.touches[0];
+            let dx = t.clientX - startX;
+            let dy = t.clientY - startY;
 
-            const dist = Math.hypot(x, y);
-            const angle = Math.atan2(y, x);
+            dx = Math.max(-40, Math.min(40, dx));
+            dy = Math.max(-40, Math.min(40, dy));
 
-            const limited = Math.min(this.maxDistance, dist);
+            this.stick.style.transform = `translate(${dx}px, ${dy}px)`;
 
-            const stickX = Math.cos(angle) * limited;
-            const stickY = Math.sin(angle) * limited;
+            this.value.x = dx / 40;
+            this.value.y = dy / 40;
+        });
 
-            this.stick.style.transform = `translate(${stickX}px, ${stickY}px)`;
-
-            this.value.x = stickX / this.maxDistance;
-            this.value.y = stickY / this.maxDistance;
-        };
-
-        container.addEventListener("touchstart", () => this.active = true);
-        container.addEventListener("touchend", () => {
-            this.active = false;
+        this.base.addEventListener("touchend", () => {
+            active = false;
+            this.stick.style.transform = `translate(0px, 0px)`;
             this.value = { x: 0, y: 0 };
-            this.stick.style.transform = "translate(0px, 0px)";
         });
-
-        container.addEventListener("touchmove", move);
     }
 }
