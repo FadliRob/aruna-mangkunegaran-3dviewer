@@ -24,7 +24,7 @@
         border-radius: 50%;
         backdrop-filter: blur(4px);
         touch-action: none;
-        display: none; /* Auto enable on mobile */
+        display: none;
     }
 
     #joystick {
@@ -44,6 +44,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/js/loaders/RGBELoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
@@ -51,14 +52,12 @@ let scene, camera, renderer, mixer;
 let controls;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
-let canJump = false;
 
 // Detect mobile
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 // Scene
 scene = new THREE.Scene();
-scene.background = new THREE.Color(0x202020);
 
 // Camera
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
@@ -67,7 +66,18 @@ camera.position.set(0, 1.6, 5);
 // Renderer
 renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputEncoding = THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
+
+// ⭐⭐⭐ LOAD HDR ⭐⭐⭐
+new THREE.RGBELoader()
+    .setPath("./")
+    .load("env.hdr", function (hdrMap) {
+        hdrMap.mapping = THREE.EquirectangularReflectionMapping;
+        scene.environment = hdrMap;
+        scene.background = hdrMap;  // jika mau background warna HDR
+    });
 
 // Pointer Lock (Desktop FPS)
 controls = new THREE.PointerLockControls(camera, document.body);
@@ -92,7 +102,6 @@ loader.load("Mangkunegaran.glb", gltf => {
     const center = box.getCenter(new THREE.Vector3());
     model.position.sub(center);
 
-    // Adjust height so player stands on ground
     model.position.y = 0;
 
     scene.add(model);
@@ -110,17 +119,15 @@ const joystick = document.getElementById("joystick");
 
 if (isMobile) joyContainer.style.display = "block";
 
-let joyActive = false, joyX = 0, joyY = 0;
+let joyX = 0, joyY = 0;
 
-joyContainer.addEventListener("touchstart", e => {
-    joyActive = true;
-});
+joyContainer.addEventListener("touchstart", () => {});
 
 joyContainer.addEventListener("touchmove", e => {
-    const touch = e.touches[0];
+    const t = e.touches[0];
     const rect = joyContainer.getBoundingClientRect();
-    const x = touch.clientX - rect.left - 60;
-    const y = touch.clientY - rect.top - 60;
+    const x = t.clientX - rect.left - 60;
+    const y = t.clientY - rect.top - 60;
     const dist = Math.sqrt(x*x + y*y);
 
     if (dist < 40) {
@@ -131,8 +138,7 @@ joyContainer.addEventListener("touchmove", e => {
     }
 });
 
-joyContainer.addEventListener("touchend", e => {
-    joyActive = false;
+joyContainer.addEventListener("touchend", () => {
     joystick.style.left = "30px";
     joystick.style.top = "30px";
     joyX = joyY = 0;
@@ -144,12 +150,10 @@ function animate() {
 
     const speed = 0.06;
 
-    // Mobile movement
     if (isMobile) {
         direction.x = joyX;
         direction.z = joyY;
     } else {
-        // WASD movement
         direction.z = Number(keys.w) - Number(keys.s);
         direction.x = Number(keys.d) - Number(keys.a);
     }
