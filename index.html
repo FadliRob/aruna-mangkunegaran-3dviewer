@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>ARUNA irtual Tour - Mangkunegaran</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: sans-serif;
+        }
+
+        #loading {
+            position: fixed;
+            width: 100%;
+            top: 40%;
+            text-align: center;
+            color: white;
+            font-size: 22px;
+        }
+
+        /* Joystick */
+        #joystickContainer {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            width: 140px;
+            height: 140px;
+            z-index: 20;
+        }
+
+        /* Look button mobile */
+        #lookButton {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.4);
+            color: black;
+            font-weight: bold;
+            border-radius: 10px;
+            z-index: 20;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="loading">Loading model...</div>
+
+<div id="joystickContainer"></div>
+<div id="lookButton">LOOK</div>
+
+<script src="libs/three.min.js"></script>
+<script src="libs/GLTFLoader.js"></script>
+<script src="libs/PointerLockControls.js"></script>
+<script src="libs/RGBELoader.js"></script>
+
+<script src="joystick.js"></script>
+<script src="main.js"></script>
+
+</body>
+</html>
