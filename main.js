@@ -1,7 +1,7 @@
-import * as THREE from "./libs/three.module.js";
-import { GLTFLoader } from "./libs/GLTFLoader.js";
-import { RGBELoader } from "./libs/RGBELoader.js";
-import { PointerLockControls } from "./libs/PointerLockControls.js";
+import * as THREE from "/libs/three.min.js";
+import { GLTFLoader } from "/libs/GLTFLoader.js";
+import { RGBELoader } from "/libs/RGBELoader.js";
+import { PointerLockControls } from "/libs/PointerLockControls.js";
 
 let scene, camera, renderer, controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
@@ -89,3 +89,4 @@ function animate() {
 
     controls.moveRight(dir.x * speed);
     controls.moveForward(dir.z * speed);
+
